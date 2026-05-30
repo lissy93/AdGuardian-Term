@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Get the version
         id: get_version
@@ -44,7 +44,7 @@ jobs:
           args: --release --target=x86_64-unknown-linux-musl
 
       - name: Upload x86_64 Binary
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: adguardian-x86_64
           path: ./target/x86_64-unknown-linux-musl/release/adguardian
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Get the version
         id: get_version
@@ -78,7 +78,7 @@ jobs:
         run: cross build --target=armv7-unknown-linux-gnueabihf --release
         
       - name: Upload ARM V7 Binary
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: adguardian-arm-v7
           path: ./target/armv7-unknown-linux-gnueabihf/release/adguardian
@@ -88,7 +88,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Get the version
         id: get_version
@@ -104,7 +104,7 @@ jobs:
         run: cross build --target aarch64-unknown-linux-gnu --release
 
       - name: Upload ARM64 Binary
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: adguardian-arm64
           path: ./target/aarch64-unknown-linux-gnu/release/adguardian
@@ -115,7 +115,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Get the version
         id: get_version
@@ -135,7 +135,7 @@ jobs:
           args: --release
 
       - name: Upload MacOS Binary
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: adguardian-macos
           path: ./target/release/adguardian
@@ -145,7 +145,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Get the version
         id: get_version
@@ -165,7 +165,7 @@ jobs:
           args: --release
 
       - name: Upload Windows Binary
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: adguardian-windows
           path: ./target/release/adguardian.exe
@@ -176,7 +176,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Get the version
         id: get_version
@@ -195,31 +195,31 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
 
       - name: Download x86_64 Binary
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: adguardian-x86_64
           path: ./target/x86_64-unknown-linux-musl/release/
 
       - name: Download ARM V7 Binary
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: adguardian-arm-v7
           path: ./target/armv7-unknown-linux-gnueabihf/release/
 
       - name: Download ARM64 Binary
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: adguardian-arm64
           path: ./target/aarch64-unknown-linux-gnu/release/
 
       - name: Download MacOS Binary
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: adguardian-macos
           path: ./target/release/
 
       - name: Download Windows Binary
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: adguardian-windows
           path: ./target/release/
