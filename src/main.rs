@@ -60,7 +60,14 @@ async fn run() -> anyhow::Result<()> {
                     return Err(anyhow::anyhow!("Failed to send query data"));
                 }
                 
-                let stats = fetch_adguard_stats(&client, &hostname, &username, &password).await?;
+                let (mut stats, client_map) = fetch_adguard_stats(&client, &hostname, &username, &password).await?;
+                
+                for domain in &mut stats.top_clients {
+                    if let Some(client_name) = client_map.get(&domain.name) {
+                        domain.name = client_name.clone();
+                    }
+                }
+                
                 if stats_tx.send(stats).await.is_err() {
                     return Err(anyhow::anyhow!("Failed to send stats data"));
                 }

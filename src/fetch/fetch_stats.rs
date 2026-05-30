@@ -15,6 +15,17 @@ pub struct DomainData {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct ClientsResponse {
+    clients: Vec<ClientEntry>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct ClientEntry {
+    name: Option<String>,
+    ids: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct StatsResponse {
     pub num_dns_queries: u64,
     pub num_blocked_filtering: u64,
@@ -45,21 +56,39 @@ pub async fn fetch_adguard_stats(
     endpoint: &str,
     username: &str,
     password: &str,
-) -> Result<StatsResponse, anyhow::Error> {
+) -> Result<(StatsResponse, HashMap<String, String>), anyhow::Error> {
     let auth_string = format!("{}:{}", username, password);
     let auth_header_value = format!("Basic {}", base64::encode(&auth_string));
     let mut headers = reqwest::header::HeaderMap::new();
     headers.insert(AUTHORIZATION, auth_header_value.parse()?);
     headers.insert(CONTENT_LENGTH, HeaderValue::from_static("0"));
 
-    let url = format!("{}/control/stats", endpoint);
-    let response = client.get(&url).headers(headers).send().await?;
-    if !response.status().is_success() {
-        return Err(anyhow::anyhow!("Request failed with status code {}", response.status()));
+    let clients_url = format!("{}/control/clients", endpoint);
+    let clients_response = client.get(&clients_url).headers(headers.clone()).send().await?;
+    if !clients_response.status().is_success() {
+        return Err(anyhow::anyhow!("Clients request failed with status code {}", clients_response.status()));
     }
 
-    let data = response.json().await?;
-    Ok(data)
+    let possible_clients: Option<ClientsResponse> = clients_response.json().await.unwrap_or(None);
+    let mut client_map = HashMap::new();
+    if let Some(clients) = possible_clients {
+        for client in clients.clients {
+            if let Some(name) = client.name {
+                for ip in client.ids {
+                    client_map.insert(ip, name.clone());
+                }
+            }
+        }
+    }
+
+    let stats_url = format!("{}/control/stats", endpoint);
+    let stats_response = client.get(&stats_url).headers(headers).send().await?;
+    if !stats_response.status().is_success() {
+        return Err(anyhow::anyhow!("Stats request failed with status code {}", stats_response.status()));
+    }
+
+    let stats: StatsResponse = stats_response.json().await?;
+    Ok((stats, client_map))
 }
 
 /// Deserialize a list of domains from the JSON data

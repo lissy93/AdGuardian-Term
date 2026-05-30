@@ -16,6 +16,8 @@ pub struct Query {
     #[serde(rename = "elapsedMs")]
     pub elapsed_ms: String,
     pub question: Question,
+    #[serde(default)]
+    pub client_info: Option<ClientInfo>,
     pub reason: String,
     pub time: String,
 }
@@ -26,6 +28,11 @@ pub struct Question {
     pub name: String,
     #[serde(rename = "type")]
     pub question_type: String,
+}
+
+#[derive(Deserialize)]
+pub struct ClientInfo {
+    pub name: Option<String>,
 }
 
 pub async fn fetch_adguard_query_log(

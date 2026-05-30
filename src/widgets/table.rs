@@ -17,7 +17,13 @@ pub fn make_query_table(data: &[Query], width: u16) -> Table<'_> {
       let question = Cell::from(make_request_cell(&query.question).unwrap())
           .style(Style::default().add_modifier(Modifier::BOLD));
 
-      let client = Cell::from(query.client.as_str())
+      let client_names = query.client_info
+          .as_ref()
+          .and_then(|info| info.name.as_deref())
+          .filter(|name| !name.is_empty())
+          .map_or_else(|| query.client.as_str(), |name| name);
+      
+      let client = Cell::from(client_names)
           .style(Style::default().fg(Color::Blue));
 
       let (time_taken, elapsed_color) = make_time_taken_and_color(&query.elapsed_ms).unwrap();
@@ -125,6 +131,8 @@ fn make_row_color(reason: &str) -> Color {
       Color::Green
   } else if reason == "FilteredBlackList" {
       Color::Red
+  } else if reason == "Rewrite" {
+      Color::LightGreen
   } else {
       Color::Yellow
   }
@@ -137,6 +145,8 @@ fn block_status_text(reason: &str, cached: bool) -> (String, Color) {
       ("Blacklisted".to_string(), Color::Red)
   } else if cached {
       ("Cached".to_string(), Color::Cyan)
+  } else if reason == "Rewrite" {
+      ("Rewrite".to_string(), Color::LightGreen)
   } else if reason == "NotFilteredNotFound" {
       ("Allowed".to_string(), Color::Green)
   } else {
