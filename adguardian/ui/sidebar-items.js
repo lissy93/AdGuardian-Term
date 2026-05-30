@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["draw_ui"]};
+window.SIDEBAR_ITEMS = {"fn":["draw_ui","is_quit_key"],"struct":["TerminalGuard"]};
