@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["check_for_updates","check_version","get_env","get_latest_version","print_ascii_art","print_error","print_info","verify_connection","welcome"],"struct":["Crate","CratesIoResponse"]};
+window.SIDEBAR_ITEMS = {"fn":["check_for_updates","check_version","default_for","exit_interrupted","get_env","get_latest_version","masked_loop","print_ascii_art","print_error","print_info","prompt_for","read_field","read_input","read_masked","verify_connection","welcome","with_retries"],"struct":["Crate","CratesIoResponse"]};

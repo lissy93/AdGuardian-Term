@@ -14,7 +14,7 @@
 <a href=#14 id=14 data-nosnippet>14</a>      <span class="kw">let </span>time = Cell::from(time_ago(query.time.as_str()).unwrap_or(<span class="string">"unknown"</span>.to_string()))
 <a href=#15 id=15 data-nosnippet>15</a>        .style(Style::default().fg(Color::Gray));
 <a href=#16 id=16 data-nosnippet>16</a>
-<a href=#17 id=17 data-nosnippet>17</a>      <span class="kw">let </span>question = Cell::from(make_request_cell(<span class="kw-2">&amp;</span>query.question).unwrap())
+<a href=#17 id=17 data-nosnippet>17</a>      <span class="kw">let </span>question = Cell::from(make_request_cell(<span class="kw-2">&amp;</span>query.question))
 <a href=#18 id=18 data-nosnippet>18</a>        .style(Style::default().add_modifier(Modifier::BOLD));
 <a href=#19 id=19 data-nosnippet>19</a>
 <a href=#20 id=20 data-nosnippet>20</a>      <span class="kw">let </span>client = Cell::from(query.client.as_str()).style(Style::default().fg(Color::Blue));
@@ -95,8 +95,8 @@
 <a href=#95 id=95 data-nosnippet>95</a>}
 <a href=#96 id=96 data-nosnippet>96</a>
 <a href=#97 id=97 data-nosnippet>97</a><span class="comment">// Return cell showing info about the request made in a given query
-<a href=#98 id=98 data-nosnippet>98</a></span><span class="kw">fn </span>make_request_cell(q: <span class="kw-2">&amp;</span>Question) -&gt; <span class="prelude-ty">Result</span>&lt;String, anyhow::Error&gt; {
-<a href=#99 id=99 data-nosnippet>99</a>  <span class="prelude-val">Ok</span>(<span class="macro">format!</span>(<span class="string">"[{}] {} - {}"</span>, q.class, q.question_type, q.name))
+<a href=#98 id=98 data-nosnippet>98</a></span><span class="kw">fn </span>make_request_cell(q: <span class="kw-2">&amp;</span>Question) -&gt; String {
+<a href=#99 id=99 data-nosnippet>99</a>  <span class="macro">format!</span>(<span class="string">"[{}] {} - {}"</span>, q.class, q.question_type, q.name)
 <a href=#100 id=100 data-nosnippet>100</a>}
 <a href=#101 id=101 data-nosnippet>101</a>
 <a href=#102 id=102 data-nosnippet>102</a><span class="comment">// Return a cell showing the time taken for a query, and a color based on time
