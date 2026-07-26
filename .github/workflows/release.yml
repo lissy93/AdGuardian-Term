@@ -172,7 +172,7 @@ jobs:
           files: |
             artifacts/adguardian-*
             artifacts/SHA256SUMS
-          token: ${{ secrets.BOT_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_TOKEN || secrets.BOT_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: 📋 Job summary
         if: always()
