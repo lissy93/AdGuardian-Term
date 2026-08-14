@@ -40,6 +40,7 @@ AdGuardian Terminal Eddition - Keep an eye on your traffic, with this (unofficia
    - [With Flags](#with-flags)
    - [With Env Vars](#with-env-vars)
    - [In Docker](#in-docker)
+- [Troubleshooting](#troubleshooting)
 - [Web Mode](#web-mode)
 - [Development](#development)
   - [Prerequisites](#prerequisites)
@@ -192,6 +193,14 @@ docker run \
 ```
 	
 </details>
+
+---
+
+## Troubleshooting
+
+#### The History chart shows missing characters
+
+The chart is drawn with Unicode braille characters, so you'll need a braille-capable console font which might not be pre-installed on some Debian-based systems (like DietPi). Install `console-braille`, set `FONT="Lat15-Fixed16.psf.gz brl-16x8.psf"` in `/etc/default/console-setup`, then run `sudo setupcon --save`.
 
 ---
 
