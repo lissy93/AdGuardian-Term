@@ -25,6 +25,7 @@ jobs:
       - name: Determine and Apply Label
         uses: actions/github-script@v8
         with:
+          github-token: ${{ secrets.BOT_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             // [ label, matches Category field, matches changed file paths ]
             const categories = [
