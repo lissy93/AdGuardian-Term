@@ -235,7 +235,7 @@ jobs:
             echo "No changes to commit"
             echo "bumped=false" >> "$GITHUB_OUTPUT"
           else
-            git commit -m "Bump version to ${NEW}"
+            git commit -m "chore: bump version to ${NEW}"
             git push origin HEAD:main
             echo "bumped=true" >> "$GITHUB_OUTPUT"
           fi

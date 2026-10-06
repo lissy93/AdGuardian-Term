@@ -1,7 +1,7 @@
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use colored::*;
 use crossterm::{
-  event::{self, Event, KeyCode, KeyModifiers},
+  event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
   terminal::{disable_raw_mode, enable_raw_mode},
 };
 use reqwest::{header::LOCATION, redirect::Policy, Client, Error, StatusCode};
@@ -348,6 +348,10 @@ fn masked_loop() -> io::Result<String> {
   let mut value = String::new();
   loop {
     if let Event::Key(key) = event::read()? {
+      // Windows also reports key releases, which would double each keypress
+      if key.kind == KeyEventKind::Release {
+        continue;
+      }
       let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);
       match key.code {
         KeyCode::Enter => return Ok(value),

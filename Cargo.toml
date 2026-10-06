@@ -20,7 +20,7 @@ chrono = "0.4"
 # Handling of terminal colors
 colored = "3"
 # Term manipulation for kb + mouse events
-crossterm = { version = "0.22.0", features = ["serde", "event-stream"] }
+crossterm = { version = "0.26.1", features = ["serde", "event-stream"] }
 # Extension of futures for async computation
 futures = "0.3"
 # HTTP client
