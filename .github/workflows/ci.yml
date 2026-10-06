@@ -169,23 +169,23 @@ jobs:
         run: cargo doc --no-deps --all-features --locked
 
   # Dependencies audit for known vulnerabilities
-  # audit:
-  #   name: 🛡️ Audit
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 15
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v6
-  #       with:
-  #         persist-credentials: false
+  audit:
+    name: 🛡️ Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
-  #     - name: Install cargo-audit
-  #       uses: taiki-e/install-action@v2
-  #       with:
-  #         tool: cargo-audit
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
 
-  #     - name: Run cargo audit
-  #       run: cargo audit
+      - name: Run cargo audit
+        run: cargo audit
 
   # Run the Docker image build and smoke test
   docker:
