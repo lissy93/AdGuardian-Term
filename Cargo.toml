@@ -1,6 +1,6 @@
 [package]
 name = "adguardian"
-version = "1.7.1"
+version = "1.7.2"
 edition = "2021"
 authors = ["Alicia Sykes"]
 description = "Terminal-based, real-time traffic monitoring and statistics for your AdGuard Home instance "
