@@ -17,7 +17,7 @@ pub fn make_query_table(data: &[Query], width: u16) -> Table<'_> {
       let question = Cell::from(make_request_cell(&query.question))
         .style(Style::default().add_modifier(Modifier::BOLD));
 
-      let client = Cell::from(query.client.as_str()).style(Style::default().fg(Color::Blue));
+      let client = Cell::from(client_label(query)).style(Style::default().fg(Color::Blue));
 
       let (time_taken, elapsed_color) = make_time_taken_and_color(&query.elapsed_ms)
         .unwrap_or_else(|_| ("? ms".to_string(), Color::Gray));
@@ -99,6 +99,14 @@ fn make_request_cell(q: &Question) -> String {
   format!("[{}] {} - {}", q.class, q.question_type, q.name)
 }
 
+// Return the client's name if AdGuard knows it, otherwise its IP
+fn client_label(q: &Query) -> &str {
+  match &q.client_info {
+    Some(info) if !info.name.is_empty() => &info.name,
+    _ => &q.client,
+  }
+}
+
 // Return a cell showing the time taken for a query, and a color based on time
 fn make_time_taken_and_color(elapsed: &str) -> Result<(String, Color), anyhow::Error> {
   let elapsed_f64 = elapsed.parse::<f64>()?;
@@ -137,4 +145,23 @@ fn block_status_text(reason: &str, cached: bool) -> (String, Color) {
     ("Other Block".to_string(), Color::Yellow)
   };
   (text, color)
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn client_label_prefers_name_and_falls_back_to_ip() {
+    let label = |json: &str| client_label(&serde_json::from_str(json).unwrap()).to_string();
+    let named = r#"{"client":"1.2.3.4","client_info":{"name":"laptop"}}"#;
+    assert_eq!(label(named), "laptop");
+    for unnamed in [
+      r#"{"client":"1.2.3.4","client_info":{"name":""}}"#,
+      r#"{"client":"1.2.3.4","client_info":null}"#,
+      r#"{"client":"1.2.3.4"}"#,
+    ] {
+      assert_eq!(label(unnamed), "1.2.3.4");
+    }
+  }
 }

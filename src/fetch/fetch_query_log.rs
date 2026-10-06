@@ -13,12 +13,19 @@ pub struct QueryResponse {
 pub struct Query {
   pub cached: bool,
   pub client: String,
+  pub client_info: Option<ClientInfo>,
   pub upstream: String,
   #[serde(rename = "elapsedMs")]
   pub elapsed_ms: String,
   pub question: Question,
   pub reason: String,
   pub time: String,
+}
+
+#[derive(Default, Deserialize)]
+#[serde(default)]
+pub struct ClientInfo {
+  pub name: String,
 }
 
 #[derive(Default, Deserialize)]
