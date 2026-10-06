@@ -12,8 +12,14 @@ pub fn make_history_chart(stats: &StatsResponse) -> Chart<'_> {
   let datasets = make_history_datasets(stats);
   // Find uppermost x and y-axis bounds for chart
   let (x_bound, y_bound) = find_bounds(stats);
+  // AdGuard sends hourly buckets when stats retention is 7 days or less
+  let (x_title, now) = if stats.time_units == "hours" {
+    ("Time (Hours ago)", "Now")
+  } else {
+    ("Time (Days ago)", "Today")
+  };
   // Generate incremental labels from data's values, to render on axis
-  let x_labels = generate_x_labels(stats.dns_queries.len() as i32, 5);
+  let x_labels = generate_x_labels(stats.dns_queries.len() as i32, 5, now);
   let y_labels = generate_y_labels(y_bound as i32, 5);
   // Create chart
   let chart = Chart::new(datasets)
@@ -27,7 +33,7 @@ pub fn make_history_chart(stats: &StatsResponse) -> Chart<'_> {
     )
     .x_axis(
       Axis::default()
-        .title("Time (Days ago)")
+        .title(x_title)
         .bounds([0.0, x_bound])
         .labels(x_labels),
     )
@@ -90,16 +96,17 @@ fn generate_y_labels(max: i32, count: usize) -> Vec<Span<'static>> {
     .collect::<Vec<Span<'static>>>()
 }
 
-// Generate periodic labels to render on the x-axis (days ago)
-fn generate_x_labels(max_days: i32, num_labels: i32) -> Vec<Span<'static>> {
-  let step = max_days / (num_labels - 1);
+// Generate periodic labels to render on the x-axis (hours or days ago)
+fn generate_x_labels(len: i32, num_labels: i32, now: &'static str) -> Vec<Span<'static>> {
+  // The newest bucket is the current one, so the oldest is `len - 1` units ago
+  let oldest = (len - 1).max(0) as f64;
   (0..num_labels)
     .map(|i| {
-      let day = (max_days - i * step).to_string();
       if i == num_labels - 1 {
-        Span::styled("Today", Style::default().add_modifier(Modifier::BOLD))
+        Span::styled(now, Style::default().add_modifier(Modifier::BOLD))
       } else {
-        Span::raw(day)
+        let ago = oldest * (num_labels - 1 - i) as f64 / (num_labels - 1) as f64;
+        Span::raw((ago.round() as i32).to_string())
       }
     })
     .collect()
@@ -160,4 +167,20 @@ pub fn prepare_chart_data(stats: &mut StatsResponse) {
     convert_to_chart_data(interpolated_blocked_filtering);
 
   stats.blocked_filtering_chart = blocked_filtering_chart;
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn x_labels_count_back_from_the_newest_bucket() {
+    let labels = |len| -> Vec<String> {
+      let spans = generate_x_labels(len, 5, "Now");
+      spans.into_iter().map(|s| s.content.into_owned()).collect()
+    };
+    assert_eq!(labels(24), ["23", "17", "12", "6", "Now"]);
+    assert_eq!(labels(30), ["29", "22", "15", "7", "Now"]);
+    assert_eq!(labels(0), ["0", "0", "0", "0", "Now"]);
+  }
 }
