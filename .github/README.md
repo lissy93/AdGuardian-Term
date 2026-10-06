@@ -238,9 +238,6 @@ Then access it in your browser at `http://localhost:7681`
 AdGuardian is fully compatible with ttyd, so once you've [installed](https://github.com/tsl0922/ttyd#installation) it, you can just precede your run command with ttyd.
 E.g. `ttyd docker run -it lissy93/adguardian` or `ttyd adguardian`
 
-You can also just use the ttyd-Dockerfile, this will build the latest AdGuardian-Term from github and the latest ttyd and compiles both together into a single dockerfile.
-So you don't have to install ttyd on the host, due to security reasons.
-
 This might be useful for embedding into another app or dashboard (like Dashy 😉 - although Dashy already has an [AdGuard widget](https://github.com/Lissy93/dashy/blob/master/docs/widgets.md#adguard-home-block-stats)!) 
 
 <p align="center">
