@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["fetch_adguard_query_log"],"struct":["Query","QueryResponse","Question"]};
+window.SIDEBAR_ITEMS = {"fn":["fetch_adguard_query_log"],"struct":["ClientInfo","Query","QueryResponse","Question"]};

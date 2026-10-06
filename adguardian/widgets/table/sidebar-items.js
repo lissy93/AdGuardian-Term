@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["block_status_text","make_query_table","make_request_cell","make_row_color","make_time_taken_and_color","time_ago"]};
+window.SIDEBAR_ITEMS = {"fn":["block_status_text","client_label","make_query_table","make_request_cell","make_row_color","make_time_taken_and_color","time_ago"]};
