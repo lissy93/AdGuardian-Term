@@ -238,9 +238,6 @@ Then access it in your browser at `http://localhost:7681`
 AdGuardian is fully compatible with ttyd, so once you've [installed](https://github.com/tsl0922/ttyd#installation) it, you can just precede your run command with ttyd.
 E.g. `ttyd docker run -it lissy93/adguardian` or `ttyd adguardian`
 
-You can also just use the ttyd-Dockerfile, this will build the latest AdGuardian-Term from github and the latest ttyd and compiles both together into a single dockerfile.
-So you don't have to install ttyd on the host, due to security reasons.
-
 This might be useful for embedding into another app or dashboard (like Dashy 😉 - although Dashy already has an [AdGuard widget](https://github.com/Lissy93/dashy/blob/master/docs/widgets.md#adguard-home-block-stats)!) 
 
 <p align="center">
@@ -360,11 +357,7 @@ Contributions of any kind are very welcome (and would be much appreciated!)
 For Code of Conduct, see [Contributor Convent](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
 For project setup, see the [Development](#development) section.
 
-#### New here?
-To get started, fork the repo, make your changes, add, commit and push the code, then come back here to open a pull request. If you're new to GitHub or open source, [this tutorial](https://www.freecodecamp.org/news/how-to-make-your-first-pull-request-on-github-3#let-s-make-our-first-pull-request-) may help, I've also put some beginner guides together at [git-into-open-source](https://github.com/Lissy93/git-into-open-source) - but feel free to reach out if you need any support.
-
-#### Not a coder?
-You can support the project in other ways too, drop us a star, consider sponsoring us on GitHub, share within your network, and report any bugs you come across.
+Not a coder? You can support the project in other ways too, drop us a star, consider sponsoring us on GitHub, share within your network, and report any bugs you come across.
 
 ---
 

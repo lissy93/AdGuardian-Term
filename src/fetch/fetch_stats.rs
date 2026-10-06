@@ -21,6 +21,7 @@ pub struct StatsResponse {
   pub num_replaced_safesearch: u64,
   pub num_replaced_parental: u64,
   pub avg_processing_time: f64,
+  pub time_units: String,
   pub dns_queries: Vec<u64>,
   pub blocked_filtering: Vec<u64>,
   pub replaced_safebrowsing: Vec<u64>,

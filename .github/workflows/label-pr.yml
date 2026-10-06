@@ -25,12 +25,13 @@ jobs:
       - name: Determine and Apply Label
         uses: actions/github-script@v8
         with:
+          github-token: ${{ secrets.BOT_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             // [ label, matches Category field, matches changed file paths ]
             const categories = [
               ['dependencies', /dependenc|deps/i, /^Cargo\.(toml|lock)$/],
               ['ci', /\bci\b|build|workflow|docker/i,
-                /^\.github\/(?!README\.md$)|^(Dockerfile.*|ttyd-Dockerfile|Makefile|quick-start\.sh|\.dockerignore)$/],
+                /^\.github\/(?!README\.md$)|^(Dockerfile.*|Makefile|quick-start\.sh|\.dockerignore)$/],
               ['documentation', /\bdocs?\b|documentation/i, /\.md$/],
               ['bug', /\bbug|^fix/i, null],
               ['enhancement', /feat|enhancement/i, null],
