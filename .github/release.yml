@@ -1,0 +1,18 @@
+# Groups merged PRs into sections in the auto-generated release notes,
+# by the category labels applied in .github/workflows/label-pr.yml
+# The first category a PR's labels match wins, so order matters here.
+
+changelog:
+  categories:
+    - title: ✨ New Features
+      labels: ['enhancement']
+    - title: 🦋 Bug Fixes
+      labels: ['bug']
+    - title: 📕 Documentation
+      labels: ['documentation']
+    - title: 🛠️ Build, CI and Refactors
+      labels: ['ci', 'refactor']
+    - title: 📦 Dependencies
+      labels: ['dependencies']
+    - title: 🌈 Other Changes
+      labels: ['*']

@@ -1,0 +1,69 @@
+# Adds labels to PR based on category or files changed
+# So that release notes can be categorized by change type
+
+name: 🏷️ Label
+
+on:
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
+    types: [opened, edited]
+
+concurrency:
+  group: label-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  label:
+    name: 🏷️ Apply Category Label
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - name: Determine and Apply Label
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // [ label, matches Category field, matches changed file paths ]
+            const categories = [
+              ['dependencies', /dependenc|deps/i, /^Cargo\.(toml|lock)$/],
+              ['ci', /\bci\b|build|workflow|docker/i,
+                /^\.github\/(?!README\.md$)|^(Dockerfile.*|ttyd-Dockerfile|Makefile|quick-start\.sh|\.dockerignore)$/],
+              ['documentation', /\bdocs?\b|documentation/i, /\.md$/],
+              ['bug', /\bbug|^fix/i, null],
+              ['enhancement', /feat|enhancement/i, null],
+              ['refactor', /refactor/i, null],
+            ];
+
+            const pr = context.payload.pull_request;
+            const existing = pr.labels.map((l) => l.name);
+            if (categories.some(([label]) => existing.includes(label))) {
+              core.info('PR is already categorised, nothing to do');
+              return;
+            }
+
+            // Read the Category field, ignoring the template's comment hints
+            const body = (pr.body || '').replace(/<!--[\s\S]*?-->/g, '');
+            const stated = (body.match(/#+\s*Category\s*([^\n#]*)/) || ['', ''])[1].trim();
+            let labels = categories.filter(([, field]) => field.test(stated)).map(([label]) => label);
+
+            // If no valid category was given, infer one from the files changed
+            if (!labels.length) {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                ...context.repo, pull_number: pr.number, per_page: 100,
+              });
+              const names = files.map((f) => f.filename);
+              const counts = categories.map(([label, , paths]) =>
+                [label, paths ? names.filter((n) => paths.test(n)).length : 0]);
+              const [label, hits] = counts.reduce((a, b) => (b[1] > a[1] ? b : a));
+              if (hits * 2 > names.length) labels = [label];
+            }
+
+            if (!labels.length) {
+              core.info('Unable to determine a category for this PR');
+              return;
+            }
+            await github.rest.issues.addLabels({ ...context.repo, issue_number: pr.number, labels });
+            core.info(`Applied label(s): ${labels.join(', ')}`);
