@@ -74,12 +74,7 @@ impl Widget for HistoryChart<'_> {
     if let Some((x, y)) = origin {
       // Color::Reset, not Style::default(): set_style ignores a missing fg, so a
       // default style would leave the label green where it covers braille.
-      buf.set_string(
-        x,
-        y,
-        QUERY_COUNT_TITLE,
-        Style::default().fg(Color::Reset),
-      );
+      buf.set_string(x, y, QUERY_COUNT_TITLE, Style::default().fg(Color::Reset));
     }
   }
 }
@@ -311,7 +306,8 @@ mod tests {
       }
       braille += 1;
       assert_eq!(
-        cell.fg, color,
+        cell.fg,
+        color,
         "braille at ({col}, {y}) is {:?}, row:\n{}",
         cell.fg,
         dump(&buf)
@@ -329,7 +325,9 @@ mod tests {
     let width = title.len() as u16;
     (0..buf.area.height).find_map(|y| {
       (0..buf.area.width.saturating_sub(width)).find_map(|x| {
-        let text: String = (0..width).map(|i| buf.get(x + i, y).symbol.clone()).collect();
+        let text: String = (0..width)
+          .map(|i| buf.get(x + i, y).symbol.clone())
+          .collect();
         (text == title).then_some((x, y))
       })
     })
