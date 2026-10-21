@@ -1,13 +1,15 @@
 use tui::{
+  buffer::Buffer,
+  layout::Rect,
   style::{Color, Modifier, Style},
   symbols,
   text::Span,
-  widgets::{Axis, Block, Borders, Chart, Dataset},
+  widgets::{Axis, Block, Borders, Chart, Dataset, Widget},
 };
 
 use crate::fetch::fetch_stats::StatsResponse;
 
-pub fn make_history_chart(stats: &StatsResponse) -> Chart<'_> {
+pub fn make_history_chart(stats: &StatsResponse) -> impl Widget + '_ {
   // Convert datasets into vector that can be consumed by chart
   let datasets = make_history_datasets(stats);
   // Find uppermost x and y-axis bounds for chart
@@ -21,7 +23,6 @@ pub fn make_history_chart(stats: &StatsResponse) -> Chart<'_> {
   // Generate incremental labels from data's values, to render on axis
   let x_labels = generate_x_labels(stats.dns_queries.len() as i32, 5, now);
   let y_labels = generate_y_labels(y_bound as i32, 5);
-  // Create chart
   let chart = Chart::new(datasets)
     .block(
       Block::default()
@@ -37,14 +38,38 @@ pub fn make_history_chart(stats: &StatsResponse) -> Chart<'_> {
         .bounds([0.0, x_bound])
         .labels(x_labels),
     )
-    .y_axis(
-      Axis::default()
-        .title("Query Count")
-        .labels(y_labels)
-        .bounds([0.0, y_bound]),
-    );
+    .y_axis(Axis::default().labels(y_labels).bounds([0.0, y_bound]));
 
-  chart
+  HistoryChart { chart }
+}
+
+const QUERY_COUNT_TITLE: &str = "Query Count";
+
+// ratatui 0.20's Axis::title restyles the whole top row, so the label is drawn after the chart
+struct HistoryChart<'a> {
+  chart: Chart<'a>,
+}
+
+impl Widget for HistoryChart<'_> {
+  fn render(self, area: Rect, buf: &mut Buffer) {
+    self.chart.render(area, buf);
+    let y = area.y.saturating_add(1);
+    // ratatui 0.20 hides the title on graphs under 3 rows tall
+    if area.height < 7 {
+      return;
+    }
+    // Skip the left border. The next vertical bar on this row is the y-axis.
+    let Some(axis_x) = (area.x + 1..area.right().saturating_sub(1))
+      .find(|&x| buf.get(x, y).symbol == symbols::line::VERTICAL)
+    else {
+      return;
+    };
+    let x = axis_x + 1;
+    let room = area.right().saturating_sub(x + 1) as usize;
+    if QUERY_COUNT_TITLE.len() + 1 < room {
+      buf.set_string(x, y, QUERY_COUNT_TITLE, Style::default().fg(Color::Reset));
+    }
+  }
 }
 
 // Returns a dataset that's consumable by the chart widget
@@ -172,6 +197,7 @@ pub fn prepare_chart_data(stats: &mut StatsResponse) {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use tui::{buffer::Buffer, layout::Rect, widgets::Widget};
 
   #[test]
   fn x_labels_count_back_from_the_newest_bucket() {
@@ -182,5 +208,46 @@ mod tests {
     assert_eq!(labels(24), ["23", "17", "12", "6", "Now"]);
     assert_eq!(labels(30), ["29", "22", "15", "7", "Now"]);
     assert_eq!(labels(0), ["0", "0", "0", "0", "Now"]);
+  }
+
+  #[test]
+  fn top_row_braille_keeps_the_dataset_color() {
+    for (queries, blocked, color) in [(100u64, 0u64, Color::Green), (100, 100, Color::Red)] {
+      let mut stats = StatsResponse {
+        time_units: "hours".into(),
+        dns_queries: vec![queries; 24],
+        blocked_filtering: vec![blocked; 24],
+        replaced_safebrowsing: vec![0; 24],
+        replaced_parental: vec![0; 24],
+        ..StatsResponse::default()
+      };
+      prepare_chart_data(&mut stats);
+      let area = Rect::new(0, 0, 60, 14);
+      let mut buf = Buffer::empty(area);
+      make_history_chart(&stats).render(area, &mut buf);
+
+      let y = (0..area.height)
+        .find(|y| row_text(&buf, *y).contains(QUERY_COUNT_TITLE))
+        .unwrap();
+      let x = row_text(&buf, y).find(QUERY_COUNT_TITLE).unwrap() as u16;
+      let colors: Vec<_> = ((x + QUERY_COUNT_TITLE.len() as u16)..area.width)
+        .filter_map(|col| {
+          let cell = buf.get(col, y);
+          cell
+            .symbol
+            .chars()
+            .any(|c| ('\u{2800}'..='\u{28FF}').contains(&c))
+            .then_some(cell.fg)
+        })
+        .collect();
+      assert!(!colors.is_empty());
+      assert!(colors.iter().all(|fg| *fg == color));
+    }
+  }
+
+  fn row_text(buf: &Buffer, y: u16) -> String {
+    (0..buf.area.width)
+      .map(|x| buf.get(x, y).symbol.as_str())
+      .collect()
   }
 }
