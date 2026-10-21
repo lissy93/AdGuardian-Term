@@ -54,7 +54,8 @@ impl Widget for HistoryChart<'_> {
   fn render(self, area: Rect, buf: &mut Buffer) {
     self.chart.render(area, buf);
     let y = area.y.saturating_add(1);
-    if y >= area.bottom() {
+    // ratatui 0.20 hides the title on graphs under 3 rows tall
+    if area.height < 7 {
       return;
     }
     // Skip the left border. The next vertical bar on this row is the y-axis.
@@ -65,13 +66,9 @@ impl Widget for HistoryChart<'_> {
     };
     let x = axis_x + 1;
     let room = area.right().saturating_sub(x + 1) as usize;
-    buf.set_stringn(
-      x,
-      y,
-      QUERY_COUNT_TITLE,
-      room,
-      Style::default().fg(Color::Reset),
-    );
+    if QUERY_COUNT_TITLE.len() + 1 < room {
+      buf.set_string(x, y, QUERY_COUNT_TITLE, Style::default().fg(Color::Reset));
+    }
   }
 }
 
