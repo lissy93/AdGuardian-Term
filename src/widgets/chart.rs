@@ -38,11 +38,7 @@ pub fn make_history_chart(stats: &StatsResponse) -> impl Widget + '_ {
         .bounds([0.0, x_bound])
         .labels(x_labels),
     )
-    .y_axis(
-      Axis::default()
-        .labels(y_labels)
-        .bounds([0.0, y_bound]),
-    );
+    .y_axis(Axis::default().labels(y_labels).bounds([0.0, y_bound]));
 
   HistoryChart { chart }
 }
