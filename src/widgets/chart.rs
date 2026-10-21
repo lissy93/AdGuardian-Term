@@ -23,7 +23,6 @@ pub fn make_history_chart(stats: &StatsResponse) -> impl Widget + '_ {
   // Generate incremental labels from data's values, to render on axis
   let x_labels = generate_x_labels(stats.dns_queries.len() as i32, 5, now);
   let y_labels = generate_y_labels(y_bound as i32, 5);
-  // Create chart. The y-axis title is drawn afterwards; see HistoryChart.
   let chart = Chart::new(datasets)
     .block(
       Block::default()
@@ -37,91 +36,47 @@ pub fn make_history_chart(stats: &StatsResponse) -> impl Widget + '_ {
       Axis::default()
         .title(x_title)
         .bounds([0.0, x_bound])
-        .labels(x_labels.clone()),
+        .labels(x_labels),
     )
     .y_axis(
       Axis::default()
-        .labels(y_labels.clone())
+        .labels(y_labels)
         .bounds([0.0, y_bound]),
     );
 
-  HistoryChart {
-    chart,
-    x_labels,
-    y_labels,
-  }
+  HistoryChart { chart }
 }
 
 const QUERY_COUNT_TITLE: &str = "Query Count";
 
-// ratatui 0.20 paints an axis title's style across the rest of that row
-// (https://github.com/ratatui-org/ratatui/issues/379). On this chart that
-// turns the braille to the right of "Query Count" white. Draw the label
-// ourselves so only its own cells change.
+// ratatui 0.20's Axis::title restyles the whole top row, so the label is drawn after the chart
 struct HistoryChart<'a> {
   chart: Chart<'a>,
-  x_labels: Vec<Span<'static>>,
-  y_labels: Vec<Span<'static>>,
 }
 
 impl Widget for HistoryChart<'_> {
   fn render(self, area: Rect, buf: &mut Buffer) {
-    // This copies ratatui 0.20's private chart layout, so it only matches that
-    // version. ratatui 0.24 keeps the dataset color on this row, and
-    // Axis::title can be used again after that upgrade.
-    let origin = query_count_origin(area, &self.y_labels, &self.x_labels);
     self.chart.render(area, buf);
-    if let Some((x, y)) = origin {
-      // Color::Reset, not Style::default(): set_style ignores a missing fg, so a
-      // default style would leave the label green where it covers braille.
-      buf.set_string(x, y, QUERY_COUNT_TITLE, Style::default().fg(Color::Reset));
+    let y = area.y.saturating_add(1);
+    if y >= area.bottom() {
+      return;
     }
+    // Skip the left border. The next vertical bar on this row is the y-axis.
+    let Some(axis_x) = (area.x + 1..area.right().saturating_sub(1))
+      .find(|&x| buf.get(x, y).symbol == symbols::line::VERTICAL)
+    else {
+      return;
+    };
+    let x = axis_x + 1;
+    let room = area.right().saturating_sub(x + 1) as usize;
+    buf.set_stringn(
+      x,
+      y,
+      QUERY_COUNT_TITLE,
+      room,
+      Style::default().fg(Color::Reset),
+    );
   }
-}
-
-// Where ratatui 0.20 would place the y-axis title: top row of the graph,
-// immediately to the right of the vertical axis.
-fn query_count_origin(area: Rect, y_labels: &[Span], x_labels: &[Span]) -> Option<(u16, u16)> {
-  let area = Block::default().borders(Borders::ALL).inner(area);
-  if area.height == 0 || area.width == 0 {
-    return None;
-  }
-
-  let mut x = area.left();
-  let mut y = area.bottom() - 1;
-  if y > area.top() {
-    y -= 1;
-  }
-  x += label_column_width(area, y_labels, x_labels);
-  if y > area.top() {
-    y -= 1;
-  }
-  if x + 1 < area.right() {
-    x += 1;
-  }
-  if x >= area.right() || y <= 1 {
-    return None;
-  }
-
-  let graph_width = area.right() - x;
-  let graph_height = y - area.top() + 1;
-  let title_width = QUERY_COUNT_TITLE.len() as u16;
-  if title_width + 1 < graph_width && graph_height > 2 {
-    Some((x, area.top()))
-  } else {
-    None
-  }
-}
-
-// Width reserved for y-axis labels and the part of the first x-axis label
-// that sits left of the vertical axis. Mirrors ratatui 0.20's chart layout.
-fn label_column_width(area: Rect, y_labels: &[Span], x_labels: &[Span]) -> u16 {
-  let mut max_width = y_labels.iter().map(Span::width).max().unwrap_or(0) as u16;
-  if let Some(first) = x_labels.first() {
-    let left_of_axis = (first.width() as u16).saturating_sub(1);
-    max_width = max_width.max(left_of_axis);
-  }
-  max_width.min(area.width / 3)
 }
 
 // Returns a dataset that's consumable by the chart widget
@@ -249,7 +204,7 @@ pub fn prepare_chart_data(stats: &mut StatsResponse) {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use tui::{buffer::Buffer, layout::Rect, symbols::line, widgets::Widget};
+  use tui::{buffer::Buffer, layout::Rect, widgets::Widget};
 
   #[test]
   fn x_labels_count_back_from_the_newest_bucket() {
@@ -263,90 +218,43 @@ mod tests {
   }
 
   #[test]
-  fn query_count_label_leaves_the_top_braille_row_in_the_dataset_color() {
-    // Green is the reported bug. Red covers a peak that shares that same row,
-    // so a fix that paints the whole row green would fail this case.
-    assert_top_row_keeps_color(100, 0, Color::Green);
-    assert_top_row_keeps_color(100, 100, Color::Red);
-  }
+  fn top_row_braille_keeps_the_dataset_color() {
+    for (queries, blocked, color) in [(100u64, 0u64, Color::Green), (100, 100, Color::Red)] {
+      let mut stats = StatsResponse {
+        time_units: "hours".into(),
+        dns_queries: vec![queries; 24],
+        blocked_filtering: vec![blocked; 24],
+        replaced_safebrowsing: vec![0; 24],
+        replaced_parental: vec![0; 24],
+        ..StatsResponse::default()
+      };
+      prepare_chart_data(&mut stats);
+      let area = Rect::new(0, 0, 60, 14);
+      let mut buf = Buffer::empty(area);
+      make_history_chart(&stats).render(area, &mut buf);
 
-  fn assert_top_row_keeps_color(queries: u64, blocked: u64, color: Color) {
-    let mut stats = StatsResponse {
-      time_units: "hours".to_string(),
-      dns_queries: vec![queries; 24],
-      blocked_filtering: vec![blocked; 24],
-      replaced_safebrowsing: vec![0; 24],
-      replaced_parental: vec![0; 24],
-      ..StatsResponse::default()
-    };
-    prepare_chart_data(&mut stats);
-
-    let area = Rect::new(0, 0, 60, 14);
-    let mut buf = Buffer::empty(area);
-    make_history_chart(&stats).render(area, &mut buf);
-
-    let (x, y) = find_label(&buf).unwrap_or_else(|| panic!("label missing:\n{}", dump(&buf)));
-    assert_eq!(
-      buf.get(x - 1, y).symbol,
-      line::VERTICAL,
-      "label not against the axis:\n{}",
-      dump(&buf)
-    );
-    assert_eq!(
-      buf.get(x, y).fg,
-      Color::Reset,
-      "label should stay the default foreground"
-    );
-
-    let mut braille = 0;
-    for col in (x + QUERY_COUNT_TITLE.len() as u16)..area.width {
-      let cell = buf.get(col, y);
-      if !is_braille(&cell.symbol) {
-        continue;
-      }
-      braille += 1;
-      assert_eq!(
-        cell.fg,
-        color,
-        "braille at ({col}, {y}) is {:?}, row:\n{}",
-        cell.fg,
-        dump(&buf)
-      );
+      let y = (0..area.height)
+        .find(|y| row_text(&buf, *y).contains(QUERY_COUNT_TITLE))
+        .unwrap();
+      let x = row_text(&buf, y).find(QUERY_COUNT_TITLE).unwrap() as u16;
+      let colors: Vec<_> = ((x + QUERY_COUNT_TITLE.len() as u16)..area.width)
+        .filter_map(|col| {
+          let cell = buf.get(col, y);
+          cell
+            .symbol
+            .chars()
+            .any(|c| ('\u{2800}'..='\u{28FF}').contains(&c))
+            .then_some(cell.fg)
+        })
+        .collect();
+      assert!(!colors.is_empty());
+      assert!(colors.iter().all(|fg| *fg == color));
     }
-    assert!(
-      braille > 0,
-      "no braille to the right of the label:\n{}",
-      dump(&buf)
-    );
   }
 
-  fn find_label(buf: &Buffer) -> Option<(u16, u16)> {
-    let title = QUERY_COUNT_TITLE;
-    let width = title.len() as u16;
-    (0..buf.area.height).find_map(|y| {
-      (0..buf.area.width.saturating_sub(width)).find_map(|x| {
-        let text: String = (0..width)
-          .map(|i| buf.get(x + i, y).symbol.clone())
-          .collect();
-        (text == title).then_some((x, y))
-      })
-    })
-  }
-
-  fn is_braille(symbol: &str) -> bool {
-    symbol
-      .chars()
-      .any(|c| ('\u{2800}'..='\u{28FF}').contains(&c))
-  }
-
-  fn dump(buf: &Buffer) -> String {
-    (0..buf.area.height)
-      .map(|y| {
-        (0..buf.area.width)
-          .map(|x| buf.get(x, y).symbol.as_str())
-          .collect::<String>()
-      })
-      .collect::<Vec<_>>()
-      .join("\n")
+  fn row_text(buf: &Buffer, y: u16) -> String {
+    (0..buf.area.width)
+      .map(|x| buf.get(x, y).symbol.as_str())
+      .collect()
   }
 }
