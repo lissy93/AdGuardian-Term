@@ -3,7 +3,7 @@
 	<i>Terminal-based, real-time traffic monitoring and statistics for your AdGuard Home instance</i>
 </p>
 <p align="center">
-  <img width="200" src="https://i.ibb.co/25GNT0n/adguardian-banner-4.png" />
+  <img width="200" src="https://pixelflare.cc/alicia/logo/adguardian" />
 </p>
 
 ## About
@@ -11,7 +11,7 @@
 AdGuardian Terminal Eddition - Keep an eye on your traffic, with this (unofficial) buddy for your AdGuard Home instance
 
 <p align="center">
-<img width="600" src="https://i.ibb.co/Nrtd01d/adguardian-demo.gif?" >
+<img width="600" src="https://pixelflare.cc/alicia/project-screens/adguardian-demo" >
 </p>
 
 #### Features
@@ -364,7 +364,7 @@ Not a coder? You can support the project in other ways too, drop us a star, cons
 ## License
 
 
-> _**[Lissy93/AdGuardian-Term](https://github.com/Lissy93/adguardian-term)** is licensed under [MIT](https://github.com/Lissy93/adguardian-term/blob/HEAD/LICENSE) © [Alicia Sykes](https://aliciasykes.com) 2023._<br>
+> _**[Lissy93/AdGuardian-Term](https://github.com/Lissy93/adguardian-term)** is licensed under [MIT](https://github.com/Lissy93/adguardian-term/blob/HEAD/LICENSE) © [Alicia Sykes](https://aliciasykes.com) 2023 - present._<br>
 > <sup align="right">For information, see <a href="https://tldrlegal.com/license/mit-license">TLDR Legal > MIT</a></sup>
 
 <details>
